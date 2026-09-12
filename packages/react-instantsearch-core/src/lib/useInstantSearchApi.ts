@@ -217,7 +217,15 @@ export function useInstantSearchApi<TUiState extends UiState, TRouteState>(
         // We cancel the previous cleanup function because we don't want to
         // dispose the search during an update.
         clearTimeout(cleanupTimerRef.current);
+        cleanupTimerRef.current = null;
         search._preventWidgetCleanup = false;
+        // The deferred dispose may already have run (e.g. App Router
+        // preserving the page fiber across a long navigation). Restart so
+        // <InstantSearch> does not keep rendering null.
+        if (!search.started) {
+          search.start();
+          forceUpdate();
+        }
       }
 
       return () => {
